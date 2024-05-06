@@ -77,11 +77,11 @@ region = 'us-east-2'
 stop_tag_key = 'Auto-Stop'
 start_tag_key = 'Auto-Start'
 tag_value = 'TRUE'
+#! Creating EC2 client using boto3
 ec2 = boto3.client('ec2', region_name=region)
 
 def lambda_handler(event, context):
     # TODO implement
-    #! Creating EC2 client using boto3
     instances = ec2.describe_instances()
     print(f'Instances :: {instances}')
     # Iterate through reservations and instances
