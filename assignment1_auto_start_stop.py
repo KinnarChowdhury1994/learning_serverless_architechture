@@ -6,17 +6,17 @@ region = 'us-east-2'
 stop_tag_key = 'Auto-Stop'
 start_tag_key = 'Auto-Start'
 tag_value = 'TRUE'
+ec2 = boto3.client('ec2', region_name=region)
 
 def lambda_handler(event, context):
     # TODO implement
     #! Creating EC2 client using boto3
-    ec2 = boto3.client('ec2', region_name=region)
-    response = ec2.describe_instances()
+    instances = ec2.describe_instances()
     print(f'Instances :: {instances}')
     # Iterate through reservations and instances
     for reservation in instances['Reservations']:
         for instance in reservation['Instances']:
-            # Check if the 'AutoShutdown' tag exists and its value is 'true'
+            #! Check if the 'Auto-Stop' tag exists and its value is 'TRUE'
             for tag in instance.get('Tags', []):
                 if tag['Key'] == stop_tag_key and tag['Value'] == tag_value:
                     instance_id = instance['InstanceId']
@@ -31,8 +31,9 @@ def lambda_handler(event, context):
                     else:
                         print(f"EC2 instance {instance_id} is not in a 'running' state, skipping.")
                 else:
-                    print(f"No matching instances with the {tag_key}:{tag_value} tag found.")
+                    print(f"No matching instances with the {stop_tag_key}:{tag_value} tag found.")
                     
+                #! Check if the 'Auto-Stop' tag exists and its value is 'TRUE'
                 if tag['Key'] == start_tag_key and tag['Value'] == tag_value:
                     instance_id = instance['InstanceId']
                     
@@ -42,11 +43,11 @@ def lambda_handler(event, context):
                     # If the instance is running, stop it
                     if instance_state == 'stopped':
                         ec2.start_instances(InstanceIds=[instance_id])
-                        print(f"Stopped EC2 instance {instance_id}")
+                        print(f"Started EC2 instance {instance_id}")
                     else:
-                        print(f"EC2 instance {instance_id} is not in a 'running' state, skipping.")
+                        print(f"EC2 instance {instance_id} is not in a 'stopped' state, skipping.")
                 else:
-                    print(f"No matching instances with the {tag_key}:{tag_value} tag found.")
+                    print(f"No matching instances with the {start_tag_key}:{tag_value} tag found.")
     
     #! 'body': json.dumps('Hello from Lambda Function! - Kinnar Chowdhury')
     # return {
