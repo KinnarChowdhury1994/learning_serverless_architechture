@@ -38,3 +38,28 @@ Instructions:
 
    - Review the Lambda logs to identify the buckets without server-side encryption.
 """
+import boto3
+import json
+
+s3 = boto3.client('s3')
+
+def lambda_handler(event, context):
+    # TODO implement
+    # return {
+    #     'statusCode': 200,
+    #     'body': json.dumps('Hello from Lambda!')
+    # }
+    
+    # response = s3.list_buckets()
+    s3List = s3.list_buckets()
+    print(f"All S3 Buckets :: {s3List}")
+    
+    # Get a list of all bucket names from the response
+    buckets = [bucket['Name'] for bucket in s3List['Buckets']]
+    # Print out the bucket list
+    print(f"Bucket List: {buckets}")
+    
+    for i in range(len(buckets)):
+        enc = s3.get_bucket_encryption(Bucket=str(buckets[i]))
+        rules = enc['ServerSideEncryptionConfiguration']['Rules']
+        print(f"Bucket: {buckets[i]} =============== Encryption: {rules}\n")
