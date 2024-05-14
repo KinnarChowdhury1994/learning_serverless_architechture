@@ -42,10 +42,46 @@ Instructions:
 """
 import json
 import boto3
+from datetime import datetime,timedelta
+
+bucket_name = "kinnar-chowdhury-b4"
+cleanup_schedule = 30
+
+S3 = boto3.client('s3')
 
 def lambda_handler(event, context):
-    # TODO implement
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
-    }
+    # # TODO implement
+    # return {
+    #     'statusCode': 200,
+    #     'body': json.dumps('Hello from Lambda!')
+    # }
+    objects = S3.list_objects(Bucket=str(bucket_name))
+    print(f"Objects in {bucket_name} Bucket :: {objects}")
+    
+    contents = objects.get('Contents',[])
+    if len(contents) > 0:
+        for i in range(len(contents)):
+            file = contents[i]['Key']
+            print(f'Object inside bucket :: {file}')
+            
+            LastModified = contents[i]['LastModified'].replace(tzinfo=None)
+            print(f'Object Last Modified :: {LastModified}')
+            
+            currentDateTime = datetime.utcnow().replace(tzinfo=None)
+            print(f'Current DateTime :: {currentDateTime}')
+            
+            delta = currentDateTime.toordinal() - LastModified.toordinal()
+            print(f"Delta Days :: {delta}")
+            
+            if int(delta) > int(cleanup_schedule):
+                print(f'Object {file} is Older than {cleanup_schedule} Days')
+                
+                print("Initiating Auto Cleanup Process.")
+                resp = S3.delete_object(Bucket=str(bucket_name),Key=str(file))
+                print(f"Response after delete object operation :: {file}")
+                print(f"Object Older than {cleanup_schedule} days Deleted Successfully.")
+            else:
+                print("Nothing to do here.")
+            
+    else:
+        print("No Objects Available in the Bucket")
